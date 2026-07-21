@@ -27,7 +27,7 @@
             const a = document.getElementById('a').value;
             const b = document.getElementById('b').value;
             const op = document.getElementById('op').value;
-            fetch(`calc?a=${a}&b=${b}&op=${op}`)
+            fetch('calc?a=' + a + '&b=' + b + '&op=' + op)
                 .then(response => response.text())
                 .then(text => {
                     document.getElementById('result').innerText = text;
