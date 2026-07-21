@@ -4,27 +4,25 @@ pipeline {
         maven 'Maven3'
         jdk 'JDK21'
     }
+    environment {
+        TOMCAT_CREDS = credentials('tomcat-creds')
+    }
     stages {
         stage('Clone') {
             steps {
                 git branch: 'main', url: 'https://github.com/SuryaKarthikeshPolamraju/calculator_cicd.git'
             }
         }
-        stage('Build & Test') {
+        stage('Build, Test & Package') {
             steps {
-                sh 'mvn clean test'
-            }
-        }
-        stage('Package') {
-            steps {
-                sh 'mvn package'
+                sh 'mvn clean package'
             }
         }
         stage('Deploy to Tomcat') {
             steps {
                 sh '''
-                curl -u admin:Jenkins@123 --upload-file target/app.war \
-                "http://44.223.24.228:8080/manager/text/deploy?path=/app&update=true"
+                curl -u $TOMCAT_CREDS_USR:$TOMCAT_CREDS_PSW --upload-file target/app.war \
+                "http://${TOMCAT_IP}:8080/manager/text/deploy?path=/&update=true"
                 '''
             }
         }
