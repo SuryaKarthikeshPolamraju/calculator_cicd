@@ -20,12 +20,11 @@ pipeline {
         }
         stage('Deploy to Tomcat') {
             steps {
-                sh '''
-                curl -u $TOMCAT_CREDS_USR:$TOMCAT_CREDS_PSW --upload-file target/app.war \
-                "http://${TOMCAT_IP}:8080/manager/text/deploy?path=/&update=true"
-                '''
-            }
-        }
+                deploy adapters: [tomcat9(credentialsId: 'tomcat-creds', url: "http://${TOMCAT_IP}:8080")],
+                    contextPath: '/',
+                    war: 'target/app.war'
+    }
+}
     }
     post {
         always {
