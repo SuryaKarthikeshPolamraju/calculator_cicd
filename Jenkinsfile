@@ -8,9 +8,9 @@ pipeline {
         TOMCAT_CREDS = credentials('tomcat-creds')
     }
     stages {
-        stage('Clone') {
-            steps {
-                git branch: 'main', url: 'https://github.com/SuryaKarthikeshPolamraju/calculator_cicd.git'
+        stage('Checkput') {
+            steps{
+                checkout scm
             }
         }
         stage('Build, Test & Package') {
