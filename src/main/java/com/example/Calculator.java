@@ -6,7 +6,11 @@ public class Calculator {
     }
 
     public int subtract(int a, int b) {
-        return a - b;
+        if (b > a) {
+            throw new ArithmeticException("Subtraction would result in a negative value"); }
+        else {
+            return a - b;
+        }
     }
 
     public int multiply(int a, int b) {
