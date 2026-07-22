@@ -4,11 +4,11 @@ pipeline {
         maven 'Maven3'
         jdk 'JDK21'
     }
-    environment {
-        TOMCAT_CREDS = credentials('tomcat-creds')
-    }
+    // environment {
+    //     TOMCAT_CREDS = credentials('tomcat-creds')
+    // }
     stages {
-        stage('Checkput') {
+        stage('Checkout') {
             steps{
                 checkout scm
             }
@@ -27,9 +27,7 @@ pipeline {
 }
     }
     post {
-        always {
-            junit 'target/surefire-reports/*.xml'
-        }
+        
         success { echo 'Deployed successfully' }
         failure { echo 'Build/deploy failed' }
     }
