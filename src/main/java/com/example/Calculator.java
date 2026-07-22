@@ -7,7 +7,7 @@ public class Calculator {
 
     public int subtract(int a, int b) {
         if (b > a) {
-            throw new ArithmeticException("Subtraction would result in a -ve value"); }
+            throw new ArithmeticException("Subtraction would result in a negetive value"); }
         else {
             return a - b;
         }
