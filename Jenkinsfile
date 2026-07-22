@@ -27,7 +27,9 @@ pipeline {
 }
     }
     post {
-        
+        always {
+            junit 'target/surefire-reports/*.xml'
+        }
         success { echo 'Deployed successfully' }
         failure { echo 'Build/deploy failed' }
     }
