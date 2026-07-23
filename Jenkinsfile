@@ -55,9 +55,12 @@ pipeline {
                     string(credentialsId: 'jfrog-token', variable: 'JFROG_TOKEN')
                 ]) {
                     sh '''
-                        curl -fL https://install-cli.jfrog.io | sh
-                        ./jf c add jfrog-server --url=$JFROG_URL --access-token=$JFROG_TOKEN --interactive=false
-                        ./jf rt upload target/${ARTIFACT_NAME} ${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/ --server-id=jfrog-server
+                        mkdir -p $WORKSPACE/jfrog-cli
+                        curl -fL https://install-cli.jfrog.io | sh -s -- --dir=$WORKSPACE/jfrog-cli
+                        export PATH=$WORKSPACE/jfrog-cli:$PATH
+
+                        jf c add jfrog-server --url=$JFROG_URL --access-token=$JFROG_TOKEN --interactive=false
+                        jf rt upload target/${ARTIFACT_NAME} ${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/ --server-id=jfrog-server
                     '''
                 }
             }
@@ -70,7 +73,12 @@ pipeline {
                     string(credentialsId: 'jfrog-token', variable: 'JFROG_TOKEN')
                 ]) {
                     sh '''
-                        ./jf rt download "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" downloaded/ --sort-by=created --sort-order=desc --limit=1 --flat=true --server-id=jfrog-server
+                        mkdir -p $WORKSPACE/jfrog-cli
+                        curl -fL https://install-cli.jfrog.io | sh -s -- --dir=$WORKSPACE/jfrog-cli
+                        export PATH=$WORKSPACE/jfrog-cli:$PATH
+
+                        jf c add jfrog-server --url=$JFROG_URL --access-token=$JFROG_TOKEN --interactive=false
+                        jf rt download "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" downloaded/ --sort-by=created --sort-order=desc --limit=1 --flat=true --server-id=jfrog-server
                     '''
                 }
             }
