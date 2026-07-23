@@ -50,37 +50,28 @@ pipeline {
 
         stage('Upload to JFrog') {
             steps {
-                script {
-                    def server = Artifactory.server 'jfrog-server-id'
-                    def uploadSpec = """{
-                        "files": [
-                            {
-                                "pattern": "target/${ARTIFACT_NAME}",
-                                "target": "${JFROG_REPO}/com/yourorg/app/\${BUILD_NUMBER}/"
-                            }
-                        ]
-                    }"""
-                    server.upload(uploadSpec)
+                withCredentials([
+                    string(credentialsId: 'jfrog-url', variable: 'JFROG_URL'),
+                    string(credentialsId: 'jfrog-token', variable: 'JFROG_TOKEN')
+                ]) {
+                    sh '''
+                        curl -fL https://install-cli.jfrog.io | sh
+                        ./jf c add jfrog-server --url=$JFROG_URL --access-token=$JFROG_TOKEN --interactive=false
+                        ./jf rt upload target/${ARTIFACT_NAME} ${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/ --server-id=jfrog-server
+                    '''
                 }
             }
         }
 
         stage('Download Latest from JFrog') {
             steps {
-                script {
-                    def server = Artifactory.server 'jfrog-server-id'
-                    def downloadSpec = """{
-                        "files": [
-                            {
-                                "pattern": "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}",
-                                "target": "downloaded/",
-                                "flat": "true",
-                                "sort-order": "desc",
-                                "limit": "1"
-                            }
-                        ]
-                    }"""
-                    server.download(downloadSpec)
+                withCredentials([
+                    string(credentialsId: 'jfrog-url', variable: 'JFROG_URL'),
+                    string(credentialsId: 'jfrog-token', variable: 'JFROG_TOKEN')
+                ]) {
+                    sh '''
+                        ./jf rt download "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" downloaded/ --sort-by=created --sort-order=desc --limit=1 --flat=true --server-id=jfrog-server
+                    '''
                 }
             }
         }
