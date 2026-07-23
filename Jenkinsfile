@@ -52,23 +52,24 @@ stage('Upload to JFrog') {
     steps {
         sh """
             jf rt upload \
-            target/${ARTIFACT_NAME} \
-            ${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/
+            "target/${ARTIFACT_NAME}" \
+            "${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/" \
+            --server-id=artifactory
         """
     }
 }
 
 stage('Delete Local Artifact') {
     steps {
-        sh '''
+        sh """
             rm -f target/${ARTIFACT_NAME}
-        '''
+        """
     }
 }
 
-stage('Download Latest from JFrog') {
+stage('Download Latest Artifact') {
     steps {
-        sh '''
+        sh """
             mkdir -p downloaded
 
             jf rt download \
@@ -77,8 +78,9 @@ stage('Download Latest from JFrog') {
             --sort-by=created \
             --sort-order=desc \
             --limit=1 \
-            --flat=true
-        '''
+            --flat=true \
+            --server-id=artifactory
+        """
     }
 }
         stage('Deploy to Tomcat via SCP') {
