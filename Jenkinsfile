@@ -1,36 +1,116 @@
 pipeline {
     agent any
+
     tools {
         maven 'Maven3'
         jdk 'JDK21'
     }
-    // environment {
-    //     TOMCAT_CREDS = credentials('tomcat-creds')
-    // }
+
+    environment {
+        JFROG_REPO    = 'calculator-artifacts'
+        ARTIFACT_NAME = 'app.war'
+    }
+
     stages {
+
         stage('Checkout') {
-            steps{
+            steps {
                 checkout scm
             }
         }
-        stage('Build, Test & Package') {
+
+        stage('Clean, Test & Package') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean test package'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
             }
         }
-        stage('Deploy to Tomcat') {
+
+        stage('SonarQube Analysis') {
             steps {
-                deploy adapters: [tomcat9(credentialsId: 'tomcat-creds', url: "http://${TOMCAT_IP}:8080")],
-                    contextPath: '/',
-                    war: 'target/app.war'
-    }
-}
-    }
-    post {
-        always {
-            junit 'target/surefire-reports/*.xml'
+                withCredentials([string(credentialsId: 'sonar-host-url', variable: 'SONAR_HOST_URL')]) {
+                    withSonarQubeEnv('SonarQube') {
+                        sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL'
+                    }
+                }
+            }
         }
-        success { echo 'Deployed successfully' }
-        failure { echo 'Build/deploy failed' }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Upload to JFrog') {
+            steps {
+                script {
+                    def server = Artifactory.server 'jfrog-server-id'
+                    def uploadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "target/${ARTIFACT_NAME}",
+                                "target": "${JFROG_REPO}/com/yourorg/app/\${BUILD_NUMBER}/"
+                            }
+                        ]
+                    }"""
+                    server.upload(uploadSpec)
+                }
+            }
+        }
+
+        stage('Download Latest from JFrog') {
+            steps {
+                script {
+                    def server = Artifactory.server 'jfrog-server-id'
+                    def downloadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}",
+                                "target": "downloaded/",
+                                "flat": "true",
+                                "sort-order": "desc",
+                                "limit": "1"
+                            }
+                        ]
+                    }"""
+                    server.download(downloadSpec)
+                }
+            }
+        }
+
+        stage('Deploy to Tomcat via SCP') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'tomcat-ip', variable: 'TOMCAT_IP'),
+                    string(credentialsId: 'tomcat-user', variable: 'TOMCAT_USER'),
+                    string(credentialsId: 'tomcat-webapps-path', variable: 'TOMCAT_WEBAPPS')
+                ]) {
+                    sshagent(credentials: ['tomcat-ssh']) {
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} '
+                                sudo rm -rf ${TOMCAT_WEBAPPS}/ROOT
+                                sudo rm -f ${TOMCAT_WEBAPPS}/ROOT.war
+                            '
+                            scp -o StrictHostKeyChecking=no downloaded/${ARTIFACT_NAME} ${TOMCAT_USER}@${TOMCAT_IP}:${TOMCAT_WEBAPPS}/ROOT.war
+                            ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} '
+                                sudo systemctl restart tomcat9
+                            '
+                        '''
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success { echo 'Build, Sonar scan, JFrog upload/download, and SCP Deploy completed successfully' }
+        failure { echo 'Pipeline failed' }
     }
 }
