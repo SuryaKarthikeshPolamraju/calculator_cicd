@@ -48,43 +48,39 @@ pipeline {
             }
         }
 
-        stage('Upload to JFrog') {
-            steps {
-                script {
-                    def server = Artifactory.server ('jfrog-server-id')
-                    def uploadSpec = """{
-                        "files": [
-                            {
-                                "pattern": "target/${ARTIFACT_NAME}",
-                                "target": "${JFROG_REPO}/com/yourorg/app/\${BUILD_NUMBER}/"
-                            }
-                        ]
-                    }"""
-                    server.upload(uploadSpec)
-                }
-            }
-        }
+stage('Upload to JFrog') {
+    steps {
+        sh """
+            jf rt upload \
+            target/${ARTIFACT_NAME} \
+            ${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/
+        """
+    }
+}
 
-        stage('Download Latest from JFrog') {
-            steps {
-                script {
-                    def server = Artifactory.server 'jfrog-server-id'
-                    def downloadSpec = """{
-                        "files": [
-                            {
-                                "pattern": "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}",
-                                "target": "downloaded/",
-                                "flat": "true",
-                                "sort-order": "desc",
-                                "limit": "1"
-                            }
-                        ]
-                    }"""
-                    server.download(downloadSpec)
-                }
-            }
-        }
+stage('Delete Local Artifact') {
+    steps {
+        sh '''
+            rm -f target/${ARTIFACT_NAME}
+        '''
+    }
+}
 
+stage('Download Latest from JFrog') {
+    steps {
+        sh '''
+            mkdir -p downloaded
+
+            jf rt download \
+            "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" \
+            downloaded/ \
+            --sort-by=created \
+            --sort-order=desc \
+            --limit=1 \
+            --flat=true
+        '''
+    }
+}
         stage('Deploy to Tomcat via SCP') {
             steps {
                 withCredentials([
