@@ -67,17 +67,14 @@ stage('Delete Local Artifact') {
     }
 }
 
-stage('Download Latest Artifact') {
+stage('Download Artifact from JFrog') {
     steps {
         sh """
             mkdir -p downloaded
 
             jf rt download \
-            "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" \
+            "${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/${ARTIFACT_NAME}" \
             downloaded/ \
-            --sort-by=created \
-            --sort-order=desc \
-            --limit=1 \
             --flat=true \
             --server-id=artifactory
         """
