@@ -101,7 +101,7 @@ downloaded/ \
 
                     scp -o StrictHostKeyChecking=no downloaded/${ARTIFACT_NAME} ${TOMCAT_USER}@${TOMCAT_IP}:${TOMCAT_WEBAPPS}/ROOT.war
 
-                    ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} "sudo systemctl restart tomcat9"
+                    ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} "sudo systemctl restart tomcat"
                 """
             }
         }
