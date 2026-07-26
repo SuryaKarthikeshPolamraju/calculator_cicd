@@ -86,27 +86,24 @@ stage('Download Latest from JFrog') {
     }
 }
         stage('Deploy to Tomcat via SCP') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'tomcat-ip', variable: 'TOMCAT_IP'),
-                    string(credentialsId: 'tomcat-user', variable: 'TOMCAT_USER'),
-                    string(credentialsId: 'tomcat-webapps-path', variable: 'TOMCAT_WEBAPPS')
-                ]) {
-                    sshagent(credentials: ['tomcat-ssh']) {
-                        sh '''
-                            ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} '
-                                sudo rm -rf ${TOMCAT_WEBAPPS}/ROOT
-                                sudo rm -f ${TOMCAT_WEBAPPS}/ROOT.war
-                            '
-                            scp -o StrictHostKeyChecking=no downloaded/${ARTIFACT_NAME} ${TOMCAT_USER}@${TOMCAT_IP}:${TOMCAT_WEBAPPS}/ROOT.war
-                            ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} '
-                                sudo systemctl restart tomcat9
-                            '
-                        '''
-                    }
-                }
+    steps {
+        withCredentials([
+            string(credentialsId: 'tomcat-ip', variable: 'TOMCAT_IP'),
+            string(credentialsId: 'tomcat-user', variable: 'TOMCAT_USER'),
+            string(credentialsId: 'tomcat-webapps-path', variable: 'TOMCAT_WEBAPPS')
+        ]) {
+            sshagent(credentials: ['tomcat-ssh']) {
+                sh """
+                    ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} "sudo rm -rf ${TOMCAT_WEBAPPS}/ROOT && sudo rm -f ${TOMCAT_WEBAPPS}/ROOT.war"
+
+                    scp -o StrictHostKeyChecking=no downloaded/${ARTIFACT_NAME} ${TOMCAT_USER}@${TOMCAT_IP}:${TOMCAT_WEBAPPS}/ROOT.war
+
+                    ssh -o StrictHostKeyChecking=no ${TOMCAT_USER}@${TOMCAT_IP} "sudo systemctl restart tomcat9"
+                """
             }
         }
+    }
+}
     }
 
     post {
