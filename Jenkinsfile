@@ -50,12 +50,16 @@ pipeline {
 
 stage('Upload to JFrog') {
     steps {
-        sh """
-            jf rt upload \
-            "target/${ARTIFACT_NAME}" \
-            "${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/" \
-            --server-id=artifactory
-        """
+        withCredentials([
+            string(credentialsId: 'jfrog-url', variable: 'JFROG_URL'),
+            string(credentialsId: 'jfrog-token', variable: 'JFROG_TOKEN')
+        ]) {
+            sh """
+                jf c remove artifactory || true
+                jf c add artifactory --url=\$JFROG_URL --access-token=\$JFROG_TOKEN --interactive=false
+                jf rt upload "target/${ARTIFACT_NAME}" "${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/" --server-id=artifactory
+            """
+        }
     }
 }
 
@@ -67,17 +71,18 @@ stage('Delete Local Artifact') {
     }
 }
 
-stage('Download Artifact from JFrog') {
+stage('Download Latest from JFrog') {
     steps {
-        sh """
-            mkdir -p downloaded
-
-            jf rt download \
-            "${JFROG_REPO}/com/yourorg/app/${BUILD_NUMBER}/${ARTIFACT_NAME}" \
-            downloaded/ \
-            --flat=true \
-            --server-id=artifactory
-        """
+        withCredentials([
+            string(credentialsId: 'jfrog-url', variable: 'JFROG_URL'),
+            string(credentialsId: 'jfrog-token', variable: 'JFROG_TOKEN')
+        ]) {
+            sh """
+                jf c remove artifactory || true
+                jf c add artifactory --url=\$JFROG_URL --access-token=\$JFROG_TOKEN --interactive=false
+                jf rt download "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" "downloaded/" --sort-by=created --sort-order=desc --limit=1 --flat=true --server-id=artifactory
+            """
+        }
     }
 }
         stage('Deploy to Tomcat via SCP') {
