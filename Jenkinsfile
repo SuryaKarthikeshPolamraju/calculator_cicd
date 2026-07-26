@@ -34,7 +34,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'sonar-host-url', variable: 'SONAR_HOST_URL')]) {
                     withSonarQubeEnv('SonarQube') {
-                        sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL'
+                        sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.10.0.2594:sonar -Dsonar.host.url=$SONAR_HOST_URL'
                     }
                 }
             }
