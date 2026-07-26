@@ -80,7 +80,7 @@ stage('Download Latest from JFrog') {
             sh """
                 jf c remove artifactory || true
                 jf c add artifactory --url=\$JFROG_URL --access-token=\$JFROG_TOKEN --interactive=false
-                jf rt download "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" "downloaded/" --sort-by=created --sort-order=desc --limit=1 --flat=true --server-id=artifactory
+                jf rt download "${JFROG_REPO}/com/yourorg/app/*/${ARTIFACT_NAME}" "downloaded/"  --server-id=artifactory
             """
         }
     }
