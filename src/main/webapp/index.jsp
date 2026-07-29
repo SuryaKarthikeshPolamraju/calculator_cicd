@@ -11,7 +11,9 @@
 </head>
 <body>
     <h2>Simple Calculator</h2>
+    <label for="a">Number A:</label>
     <input type="number" id="a" placeholder="Number A"><br>
+    <label for="b">Number B:</label>
     <input type="number" id="b" placeholder="Number B"><br>
     <select id="op">
         <option value="add">+</option>
