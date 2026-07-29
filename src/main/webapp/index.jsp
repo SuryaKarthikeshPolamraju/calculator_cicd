@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Calculator - CI/CD Demo</title>
     <style>
@@ -15,6 +15,7 @@
     <input type="number" id="a" placeholder="Number A"><br>
     <label for="b">Number B:</label>
     <input type="number" id="b" placeholder="Number B"><br>
+    <label for="op">Operation:</label>
     <select id="op">
         <option value="add">+</option>
         <option value="subtract">−</option>

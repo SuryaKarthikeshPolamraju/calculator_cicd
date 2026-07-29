@@ -5,7 +5,7 @@ import jakarta.servlet.http.*;
 
 public class CalculatorServlet extends HttpServlet {
     private static final Calculator calc = new Calculator();
-
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("text/plain");
         try {
