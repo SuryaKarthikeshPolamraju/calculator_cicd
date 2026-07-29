@@ -5,6 +5,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.example.Calculator;
+import com.example.CalculatorServlet;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -40,7 +43,29 @@ class CalculatorServletTest {
 
         assertTrue(stringWriter.toString().contains("Result: 8.0"));
     }
+    @Test
+void testSubtractThrowsWhenResultIsNegative() {
+    Calculator calc = new Calculator();
 
+    ArithmeticException exception = assertThrows(
+        ArithmeticException.class,
+        () -> calc.subtract(3, 10)
+    );
+
+    assertEquals("Subtraction would result in a -ve value", exception.getMessage());
+}
+
+@Test
+void testSubtractDoesNotThrowWhenResultIsPositiveOrZero() {
+    Calculator calc = new Calculator();
+
+    assertDoesNotThrow(() -> calc.subtract(10, 3));
+    assertEquals(7.0, calc.subtract(10, 3));
+
+    // check boundary: exactly zero — confirm zero is allowed, not treated as negative
+    assertDoesNotThrow(() -> calc.subtract(5, 5));
+    assertEquals(0.0, calc.subtract(5, 5));
+}
     @Test
     void testSubtract() throws Exception {
         when(request.getParameter("a")).thenReturn("10");
