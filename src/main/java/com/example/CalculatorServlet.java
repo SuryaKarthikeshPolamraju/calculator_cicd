@@ -4,7 +4,7 @@ import java.io.*;
 import jakarta.servlet.http.*;
 
 public class CalculatorServlet extends HttpServlet {
-    private static finalCalculator calc = new Calculator();
+    private static final Calculator calc = new Calculator();
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("text/plain");
